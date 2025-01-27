@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Agent } from '../types';
-import { Settings, FileText, Plus, Upload } from 'lucide-react';
+import { Settings, FileText, Plus, Upload, MessageCircle } from 'lucide-react';
 import { ToolsList } from './ToolsList';
 import { DocumentsList } from './DocumentsList';
 import { AddToolModal } from './AddToolModal';
 import { UploadDocumentModal } from './UploadDocumentalModal';
+import { ChatModal } from './chat';
 
 interface AgentCardProps {
   agent: Agent;
@@ -15,6 +16,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
   const [showDocs, setShowDocs] = useState(false);
   const [showAddTool, setShowAddTool] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   return (
     <div className="bg-white border rounded-lg shadow-sm p-4">
@@ -22,10 +24,17 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
       <h3 className="text-lg font-medium text-gray-900">  {agent.name}</h3>
       
         <div className="flex space-x-2">
+        <button
+            onClick={() => setShowChat(!showChat)}
+            className="p-2 text-gray-500 hover:text-gray-700 rounded-md hover:bg-gray-100"
+          >
+            <MessageCircle className="w-5 h-5" />
+          </button>
           <button
             onClick={() => setShowTools(!showTools)}
             className="p-2 text-gray-500 hover:text-gray-700 rounded-md hover:bg-gray-100"
           >
+            
             <Settings className="w-5 h-5" />
           </button>
           <button
@@ -59,6 +68,11 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
           Upload Document
         </button>
       </div>
+      {showChat && (
+        <div className="mt-4 border-t pt-4">
+          <ChatModal agentId={agent.id} onClose={()=> setShowChat(false)}/>
+        </div>
+      )}
 
       {showTools && <ToolsList tools={agent.tools} />}
       {showDocs && <DocumentsList documents={agent.documents} />}

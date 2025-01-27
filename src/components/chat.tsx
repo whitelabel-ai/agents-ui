@@ -8,7 +8,30 @@ interface Message {
   isAudio?: boolean;
 }
 
-export default function Chat() {
+interface ChatProps {
+    agentId: number;
+  }
+
+  export const ChatModal = ({ agentId, onClose }: { agentId: number; onClose: () => void }) => {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg w-full max-w-4xl h-[80vh] flex flex-col">
+          <div className="flex justify-between items-center p-4 border-b">
+            <h3 className="text-lg font-semibold">Chat with Agent {agentId}</h3>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-full"
+            >
+              ×
+            </button>
+          </div>
+          <Chat agentId={agentId} />
+        </div>
+      </div>
+    );
+  };
+  
+export default function Chat({ agentId }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -66,7 +89,8 @@ export default function Chat() {
 
     try {
       // Enviar mensaje al endpoint
-      const response = await fetch('https://python-test-production.up.railway.app/agents/14/invoke?input=' + encodeURIComponent(inputText), {
+      const response = await fetch(
+        `https://python-test-production.up.railway.app/agents/${agentId}/invoke?input=${encodeURIComponent(inputText)}`,{
         method: 'POST',
         headers: {
           'accept': 'application/json',
@@ -80,7 +104,7 @@ export default function Chat() {
       // Mensaje recibido
       const receivedMessage: Message = {
         id: Date.now().toString(),
-        content: data.output || 'No response',
+        content: data.response || 'No response',
         type: 'received',
         timestamp: new Date()
       };
@@ -124,7 +148,11 @@ export default function Chat() {
               {message.isAudio ? (
                 <audio controls src={typeof message.content === 'string' ? message.content : URL.createObjectURL(message.content)} />
               ) : (
-                <p>{message.content}</p>
+                <p>
+                    {typeof message.content === 'string' 
+                    ? message.content 
+                    : 'Archivo adjunto'}
+                </p>
               )}
               <p className="text-xs mt-1 opacity-70">
                 {message.timestamp.toLocaleTimeString()}
