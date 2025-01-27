@@ -134,6 +134,79 @@ export default function Chat({ agentId }: ChatProps) {
   };
 
   const handleSendMessage = async () => {
+    if (audioUrl) {
+    // Create audio message
+    const audioMessage: Message = {
+      id: Date.now().toString(),
+      content: audioUrl,
+      type: 'user',
+      timestamp: new Date(),
+      isAudio: true
+    };
+    setMessages(prev => [...prev, audioMessage]);
+    
+    try {
+      // Convert audio URL to Blob
+      const audioResponse = await fetch(audioUrl);
+      const audioBlob = await audioResponse.blob();
+
+      // Create FormData and append audio file
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'audio.wav');
+
+      // Send to API
+      const response = await fetch(
+        `https://python-test-production.up.railway.app/${agentId}/invokeTest`,
+        {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json'
+          },
+          body: formData
+        }
+      );
+
+      const data = await response.json();
+      console.log(data);
+      
+      // Add response message
+      const receivedMessage: Message = {
+        id: Date.now().toString(),
+        content: data.response || data.text ||'No response',
+        type: 'received',
+        timestamp: new Date()
+      };
+
+      if (data.audio) {
+        // Convert base64 to Blob
+        const audioData = atob(data.audio);
+        const arrayBuffer = new ArrayBuffer(audioData.length);
+        const view = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < audioData.length; i++) {
+          view[i] = audioData.charCodeAt(i);
+        }
+        const audioBlob = new Blob([arrayBuffer], { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        const audioMessage: Message = {
+          id: Date.now().toString(),
+          content: audioUrl,
+          type: 'received',
+          timestamp: new Date(),
+          isAudio: true
+        };
+        
+        setMessages(prev => [...prev, receivedMessage, audioMessage]);
+      } else {
+        setMessages(prev => [...prev, receivedMessage]);
+      }
+    } catch (error) {
+      console.error('Error sending audio:', error);
+    }
+
+    setAudioUrl(null);
+    return
+  }
     if (!inputText.trim()) return;
 
     const userMessage: Message = {
