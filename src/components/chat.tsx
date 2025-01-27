@@ -45,6 +45,7 @@ export default function Chat({ agentId }: ChatProps) {
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const animationRef = useRef<number>();
   const [volume, setVolume] = useState(0);
+  
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -186,25 +187,85 @@ export default function Chat({ agentId }: ChatProps) {
   };
 
   const Waveform = () => {
-    const heights = [Math.min(volume * 0.5, 30), Math.min(volume * 0.3, 25), Math.min(volume * 0.4, 28), Math.min(volume * 0.3, 25), Math.min(volume * 0.5, 30)];
-    
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const dataRef = useRef<number[]>([]);
+    const smoothingFactor = 0.3; // Ajusta este valor entre 0 y 1 para más o menos suavizado
+  
+    useEffect(() => {
+      if (!canvasRef.current || !analyserRef.current) return;
+  
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+  
+      const bufferLength = analyserRef.current.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      
+      // Inicializar el array de datos suavizados
+      dataRef.current = Array(bufferLength).fill(0);
+      
+      const draw = () => {
+        if (!analyserRef.current) return;
+        
+        const WIDTH = canvas.width;
+        const HEIGHT = canvas.height;
+        
+        analyserRef.current.getByteFrequencyData(dataArray);
+        
+        // Limpiar el canvas con fondo transparente
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
+        
+        const barWidth = (WIDTH / bufferLength) * 2.5;
+        let x = 0;
+        
+        for(let i = 0; i < bufferLength; i++) {
+          // Aplicar suavizado
+          dataRef.current[i] = dataRef.current[i] * (1 - smoothingFactor) + 
+                              dataArray[i] * smoothingFactor;
+          
+          const barHeight = dataRef.current[i] / 2;
+          
+          // Crear gradiente para cada barra
+          const gradient = ctx.createLinearGradient(0, HEIGHT, 0, HEIGHT - barHeight);
+          gradient.addColorStop(0, '#60A5FA'); // Azul más claro
+          gradient.addColorStop(1, '#3B82F6'); // Azul principal
+  
+          ctx.fillStyle = gradient;
+          
+          // Dibujar barra con esquinas redondeadas
+          ctx.beginPath();
+          ctx.roundRect(
+            x, 
+            HEIGHT - barHeight, 
+            barWidth, 
+            barHeight, 
+            [2] // Radio de las esquinas redondeadas
+          );
+          ctx.fill();
+  
+          x += barWidth + 1;
+        }
+        
+        animationRef.current = requestAnimationFrame(draw);
+      };
+      
+      draw();
+  
+      return () => {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
+    }, []);
+  
     return (
-      <motion.div 
-        className="flex items-center h-8 gap-1"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        {heights.map((height, i) => (
-          <motion.div
-            key={i}
-            className="w-1 bg-white rounded-full"
-            animate={{ height }}
-            transition={{ duration: 0.2 }}
-            style={{ height: `${height}px` }}
-          />
-        ))}
-      </motion.div>
+      <canvas 
+        ref={canvasRef} 
+        width={100} 
+        height={40} 
+        className="rounded-lg"
+        style={{ background: 'transparent' }}
+      />
     );
   };
 
@@ -252,26 +313,28 @@ export default function Chat({ agentId }: ChatProps) {
           
           <motion.button
             onClick={isRecording ? stopRecording : startRecording}
-            className={`p-3 rounded-full ${
-              isRecording ? 'bg-blue-100' : 'bg-gray-200'
+            className={`p-2 rounded-full ${
+                isRecording ? 'bg-blue-50 bg-opacity-50' : 'bg-gray-200'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-          >
+            >
             <AnimatePresence mode='wait'>
-              {isRecording ? (
-                <Waveform />
-              ) : (
+                {isRecording ? (
+                <div className="w-[100px] h-[40px]">
+                    <Waveform />
+                </div>
+                ) : (
                 <motion.span
-                  initial={{ scale: 1 }}
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
+                    initial={{ scale: 1 }}
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
                 >
-                  🎤
+                    🎤
                 </motion.span>
-              )}
+                )}
             </AnimatePresence>
-          </motion.button>
+        </motion.button>
           
           <motion.button
             onClick={handleSendMessage}
