@@ -70,7 +70,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
       </div>
       {showChat && (
         <div className="mt-4 border-t pt-4">
-          <ChatModal agentId={agent.id} onClose={()=> setShowChat(false)}/>
+          <ChatModal agentName={agent.name} agentId={agent.id} onClose={()=> setShowChat(false)}/>
         </div>
       )}
 
