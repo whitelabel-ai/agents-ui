@@ -6,6 +6,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getAgents } from '../api'; // Cambiar la importación
 import { OrganizationCard } from '../components/OrganizationCard';
+import { CreateOrganizationModal } from '../components/CreateOrganizationModal';
 import { Plus } from 'lucide-react';
 import { Agent, Organization } from '../types';
 
@@ -16,6 +17,7 @@ export const Dashboard: React.FC = () => {
     queryKey: ['agents'],
     queryFn: getAgents,
   });
+  const[ showCreateOrg, setShowCreateOrgModal] = React.useState(false);
 
   // Obtener organizaciones únicas de los agentes
   const organizations = agents?.reduce((acc, agent) => {
@@ -49,8 +51,8 @@ export const Dashboard: React.FC = () => {
     return <div className="...">Error loading agents</div>;
   }
 
-  function setShowCreateOrg(arg0: boolean): void {
-    throw new Error('Function not implemented.');
+  function setShowCreateOrg(show: boolean): void {
+    setShowCreateOrgModal(show);
   }
 
   return (
@@ -79,6 +81,10 @@ export const Dashboard: React.FC = () => {
       )}
 
       {/* Modales se mantienen igual */}
+      <CreateOrganizationModal
+        isOpen={showCreateOrg}
+        onClose={() => setShowCreateOrg(false)}
+      />
     </div>
   );
 };

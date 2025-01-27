@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Agent, Tool } from '../types';
+import { Agent } from '../types';
 import { Settings, FileText, Plus, Upload } from 'lucide-react';
 import { ToolsList } from './ToolsList';
 import { DocumentsList } from './DocumentsList';
 import { AddToolModal } from './AddToolModal';
-// import { UploadDocumentModal } from './UploadDocumentModal';
+import { UploadDocumentModal } from './UploadDocumentalModal';
 
 interface AgentCardProps {
   agent: Agent;
@@ -19,7 +19,8 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
   return (
     <div className="bg-white border rounded-lg shadow-sm p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium text-gray-900">{agent.name}</h3>
+      <h3 className="text-lg font-medium text-gray-900">  {agent.name}</h3>
+      
         <div className="flex space-x-2">
           <button
             onClick={() => setShowTools(!showTools)}
@@ -37,6 +38,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
       </div>
 
       <div className="space-y-2 mb-4">
+        <h5 className="text-sm text-gray-600">Id: {agent.id}</h5>
         <p className="text-sm text-gray-600">Model: {agent.model_name}</p>
         <p className="text-sm text-gray-600">Temperature: {agent.temperature}</p>
       </div>
@@ -68,11 +70,11 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
         currentTools={agent.tools}
       />
       
-      {/* <UploadDocumentModal
+      <UploadDocumentModal
         isOpen={showUpload}
         onClose={() => setShowUpload(false)}
         agentId={agent.id}
-      /> */}
+      />
     </div>
   );
 };
