@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   id: string;
@@ -7,6 +9,7 @@ interface Message {
   type: 'user' | 'received';
   timestamp: Date;
   isAudio?: boolean;
+  isMarkdown? : boolean ;
 }
 
 interface ChatProps {
@@ -352,22 +355,34 @@ export default function Chat({ agentId }: ChatProps) {
             animate={{ opacity: 1, y: 0 }}
             className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                message.type === 'user' 
-                  ? 'bg-blue-700 text-white' 
-                  : 'bg-white text-gray-800'
-              }`}
-            >
-              {message.isAudio ? (
-                <audio controls src={typeof message.content === 'string' ? message.content : URL.createObjectURL(message.content)} />
-              ) : (
-                 <p>{typeof message.content === 'string' && message.content}</p>
-              )}
-              <p className="text-xs mt-1 opacity-70">
-                {message.timestamp.toLocaleTimeString()}
-              </p>
-            </div>
+            <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+  message.type === 'user' 
+    ? 'bg-blue-700 text-white' 
+    : 'bg-white text-gray-800'
+}`}>
+  {message.isAudio ? (
+    <audio controls src={typeof message.content === 'string' ? message.content : URL.createObjectURL(message.content)} />
+  ) : (
+    message.isMarkdown || true ? (
+      <ReactMarkdown 
+        className="prose"
+        remarkPlugins={[remarkGfm]}
+        components={{
+          code: ({node, ...props}) => (
+            <code className="bg-gray-100 p-1 rounded" {...props} />
+          )
+        }}
+      >
+        {message.content.toString()}
+      </ReactMarkdown>
+    ) : (
+      <p>{message.content.toString()}</p>
+    )
+  )}
+  <p className="text-xs mt-1 opacity-70">
+    {message.timestamp.toLocaleTimeString()}
+  </p>
+</div>
           </motion.div>
         ))}
         <div ref={messagesEndRef} />
