@@ -159,7 +159,7 @@ export default function Chat({ agentId }: ChatProps) {
 
       // Send to API
       const response = await fetch(
-        `https://python-test-production.up.railway.app/agents/${agentId}/invokeTest`,
+        `https://python-test-production.up.railway.app/agents/${agentId}/invokeAudio`,
         {
           method: 'POST',
           headers: {
